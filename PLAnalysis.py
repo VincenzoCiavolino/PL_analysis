@@ -5,6 +5,8 @@ from skimage.feature import peak_local_max
 import matplotlib.cm as cm
 import tkinter as tk
 from tkinter import filedialog
+from matplotlib.patches import Rectangle
+
 
 
 def load_dat_file(path):
@@ -34,10 +36,14 @@ if len(file_paths) != 3:
 # Load and concatenate
 arrays = [load_dat_file(path).T for path in file_paths]
 data_array = np.hstack(arrays)
-column_width = data_array.shape[1] // 30  # ~50 if 1500 cols
+
+num_columns = 27
+column_width = data_array.shape[1] // num_columns
+
 block_height = arrays[0].shape[0]  # assuming all arrays have same height
 all_peaks = []
-for i in range(30):  # 30 columns
+
+for i in range(num_columns):  # 30 columns
     x_start = i * column_width
     x_end = min((i + 1) * column_width, data_array.shape[1])
     region = data_array[:, x_start:x_end]  # shape (500, ~50)
@@ -56,7 +62,6 @@ for i in range(30):  # 30 columns
     # Combine coordinates with their corresponding values
     peaks_with_values = list(zip(adjusted_coordinates, peak_values))
     all_peaks.extend(peaks_with_values)
-
 
 # Optional: print shape to confirm
 print(f"Combined array shape: {data_array.shape}")
@@ -107,6 +112,23 @@ for i, (row, col) in enumerate(combined_list):
     ax1.text(col+5, row, str(i+1), color='white', fontsize=6, ha='left', va='top')
 
 # For bar plots (loop as before, using `groups[i]` and `group_colors[i]`)
+
+# Adjust width and spacing
+shrink_factor = 0.7  # 80% of original width
+actual_width = int(column_width * shrink_factor)
+side_margin = (actual_width) // 3
+
+for i in range(num_columns):
+    x_start = i * column_width + side_margin
+    rect = Rectangle(
+        (x_start, 0),                     # (x, y)
+        actual_width,                    # reduced width
+        data_array.shape[0],             # height
+        linewidth=1,
+        edgecolor='red',
+        facecolor='none'
+    )
+    ax1.add_patch(rect)
 
 
 plt.colorbar(im, ax=ax1, label="Intensity")
